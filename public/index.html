@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Tracking Analyzer Pro - LIN3S</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ffffff;
+            --bg-dark: #000000;
+            --bg-card: #111111;
+            --border: #333;
+            --text-primary: #ffffff;
+            --text-secondary: #888;
+            --success: #4caf50;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #00aaff;
+            --accent: #667eea;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 60px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .product-title {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .version-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .main-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .main-title h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-title p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .analyzer-form {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .analyzer-form:hover {
+            border-color: #555;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .input-with-suggestions {
+            position: relative;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-card);
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-top: 4px;
+            display: none;
+            z-index: 100;
+        }
+
+        .suggestions.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .suggestion-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .form-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            cursor: pointer;
+        }
+
+        .analyze-btn {
+            background: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            padding: 16px 40px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            background: #f0f0f0;
+            transform: translateY(-1px);
+        }
+
+        .analyze-btn:disabled {
+            background: var(--border);
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .analyze-btn.download-mode {
+            background: var(--success);
+            color: white;
+        }
+
+        .analyze-btn.download-mode:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            background: var(--border);
+            height: 4px;
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--info) 0%, var(--success) 100%);
+            height: 100%;
+            width: 0;
+            animation: progress 30s linear;
+        }
+
+        @keyframes progress {
+            to { width: 90%; }
+        }
+
+        .results {
+            display: none;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .score-main {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+        }
+
+        .score-grade {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score-status {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .cookie-summary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 1rem;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .platform-card {
+            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+
+        .platform-card:hover {
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+
+        .platform-icon {
+            font-size: 1.5rem;
+        }
+
+        .platform-info {
+            flex: 1;
+        }
+
+        .platform-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .platform-status {
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--warning);
+        }
+
+        .status-badge.danger {
+            background: rgba(220, 53, 69, 0.2);
+            color: var(--danger);
+        }
+
+        .cookies-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .cookies-table th,
+        .cookies-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #222;
+        }
+
+        .cookies-table th {
+            background: var(--bg-dark);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        .cookies-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .export-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .export-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .export-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            padding: 14px 28px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .export-btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .export-btn-primary:hover {
+            background: #5a67d8;
+            border-color: #5a67d8;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #ff7c3e 0%, #ff5722 100%);
+            border-radius: 16px;
+            padding: 60px 40px;
+            margin: 60px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></svg>');
+            pointer-events: none;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 20px;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            color: rgba(0, 0, 0, 0.8);
+            margin-bottom: 35px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 18px 40px;
+            background: #000;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            border: 2px solid #000;
+        }
+
+        .cta-button:hover {
+            background: transparent;
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .notification.show {
+            display: flex;
+        }
+
+        .notification.success {
+            border-color: var(--success);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .notification.error {
+            border-color: var(--danger);
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .email-form {
+            margin-top: 30px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            margin-top: 3px;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .benefits-list {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .benefit-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .benefit-icon {
+            color: var(--success);
+            font-size: 1.2rem;
+        }
+
+        .skip-link {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .skip-link:hover {
+            color: var(--text-primary);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .main-title h1 {
+                font-size: 2rem;
+            }
+
+            .tabs {
+                overflow-x: scroll;
+            }
+
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scores-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .cta-title {
+                font-size: 1.8rem;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+
+            .export-btn {
+                width: 100%;
+            }
+        }
+
+        /* Dark scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">LIN3S</div>
+                <div class="product-title">Website Tracking Analyzer</div>
+                <span class="version-badge">Pro v2.0</span>
+            </div>
+        </div>
+
+        <div class="main-title">
+            <h1>Privacy & Tracking Analysis</h1>
+            <p>Advanced detection of 40+ tracking platforms with server-side analysis, security audit, and GDPR compliance checking</p>
+        </div>
+
+        <div class="analyzer-form">
+            <form id="analyzerForm">
+                <div class="form-group">
+                    <label for="emailInputMain">Your Email</label>
+                    <input 
+                        type="email" 
+                        id="emailInputMain" 
+                        class="url-input" 
+                        placeholder="your@email.com"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="urlInput">Website URL</label>
+                    <div class="input-with-suggestions">
+                        <input 
+                            type="url" 
+                            id="urlInput" 
+                            class="url-input" 
+                            placeholder="https://example.com"
+                            required
+                        >
+                        <div class="suggestions" id="suggestions"></div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="analyze-btn" id="analyzeBtn">
+                    Start Analysis
+                </button>
+            </form>
+        </div>
+
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <h3>Analyzing website...</h3>
+            <p>Detecting 40+ tracking technologies and privacy implementations</p>
+            <div class="progress-bar">
+                <div class="progress-bar-fill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Initializing browser...</div>
+        </div>
+
+        <div class="notification" id="notification">
+            <span class="notification-text"></span>
+        </div>
+
+        <!-- Email Capture Modal -->
+        <div class="modal-overlay" id="emailModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Get Your Complete Analysis Report</div>
+                    <div class="modal-subtitle">
+                        Your tracking analysis is ready! Enter your email to access the full report and receive personalized recommendations.
+                    </div>
+                </div>
+
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>Complete tracking and privacy analysis</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>Personalized improvement recommendations</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>GDPR compliance assessment</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>Server-side tracking detection report</span>
+                    </div>
+                </div>
+
+                <form id="emailForm" class="email-form">
+                    <input 
+                        type="text" 
+                        id="nameInput" 
+                        class="form-input" 
+                        placeholder="Your name"
+                        required
+                    >
+                    <input 
+                        type="email" 
+                        id="emailInput" 
+                        class="form-input" 
+                        placeholder="your@email.com"
+                        required
+                    >
+                    <input 
+                        type="text" 
+                        id="companyInput" 
+                        class="form-input" 
+                        placeholder="Company (optional)"
+                    >
+                    
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="marketingConsent" checked>
+                        <label for="marketingConsent">
+                            I'd like to receive tracking optimization tips and updates from LIN3S (you can unsubscribe at any time)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitEmailBtn">
+                        Access Full Report
+                    </button>
+                </form>
+
+                <div class="skip-link" id="skipEmail">
+                    Continue without email (limited report)
+                </div>
+            </div>
+        </div>
+
+        <div class="results" id="resultsSection">
+            <!-- Score Section -->
+            <div class="score-section">
+                <div class="score-header">
+                    <div class="score-main">
+                        <span class="score-number"><span id="overallScore">-</span>/100</span>
+                        <span class="score-grade">Grade: <span id="grade">-</span></span>
+                    </div>
+                </div>
+                
+                <div class="scores-grid">
+                    <div class="score-item">
+                        <div class="score-value" id="privacyScore">-</div>
+                        <div class="score-label">Privacy</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-value" id="performanceScore">-</div>
+                        <div class="score-label">Performance</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-value" id="implementationScore">-</div>
+                        <div class="score-label">Implementation</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-value" id="securityScore">-</div>
+                        <div class="score-label">Security</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">Overview</button>
+                <button class="tab" data-tab="cookies">Cookies Detail</button>
+                <button class="tab" data-tab="tracking">Tracking Platforms</button>
+                <button class="tab" data-tab="security">Security</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="overview">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
+                    <!-- Quick Stats -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                        <h4 style="margin-bottom: 15px;">Quick Stats</h4>
+                        <ul style="list-style: none; line-height: 2.2;">
+                            <li>📊 Analytics: <span id="analyticsDetails" style="color: var(--text-secondary); font-size: 0.95rem;">-</span></li>
+                            <li>💰 Ad Platforms: <span id="adsDetails" style="color: var(--text-secondary); font-size: 0.95rem;">-</span></li>
+                            <li>🔒 SSL Status: <span id="sslStatus">-</span></li>
+                            <li>🍪 Consent: <span id="consentStatus">-</span></li>
+                            <li>⚡ Page Load Time: <span id="loadTime">-</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Key Issues -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                        <h4 style="margin-bottom: 15px;">Key Issues</h4>
+                        <div id="keyIssues">
+                            <p style="color: var(--text-secondary);">Analyzing...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommendations -->
+                <div style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 20px;">Recommendations</h3>
+                    <div id="recommendationsList">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="cookies">
+                <!-- Cookie Summary -->
+                <div class="cookie-summary">
+                    <h3 style="margin-bottom: 20px;">Cookie Analysis</h3>
+                    <div class="summary-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalCookies">-</div>
+                            <div class="stat-label">Total Cookies</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color: var(--success);" id="firstPartyCookies">-</div>
+                            <div class="stat-label">First-party</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color: var(--warning);" id="thirdPartyCookies">-</div>
+                            <div class="stat-label">Third-party</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color: var(--danger);" id="violationCookies">-</div>
+                            <div class="stat-label">Violations</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 30px 0 20px;">
+                    <h3>Cookie Details</h3>
+                    <div>
+                        <label style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="showAllCookies" style="margin-right: 8px;">
+                            Show all cookies
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;">
+                    <table class="cookies-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Domain</th>
+                                <th>Type</th>
+                                <th>Purpose</th>
+                                <th>Expiry</th>
+                                <th>GDPR Category</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cookiesTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 30px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tracking">
+                <h3 style="margin: 30px 0 20px;">Tracking Platforms</h3>
+                
+                <!-- Trackers Table -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px;">
+                        <span style="font-size: 1.5rem;">🔍</span>
+                        <h4 style="font-size: 1.2rem; margin: 0;">
+                            Trackers detected <span id="trackersCount" style="color: var(--text-secondary); font-weight: 400;">(0)</span>
+                        </h4>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="text-align: left; padding: 12px; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Platform</th>
+                                    <th style="text-align: left; padding: 12px; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Category</th>
+                                    <th style="text-align: left; padding: 12px; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Data is sent to</th>
+                                    <th style="text-align: left; padding: 12px; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Tracking method</th>
+                                    <th style="text-align: left; padding: 12px; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trackersTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+                                        No trackers detected yet
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- GTM Section with better design -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 25px;">
+                        <h4 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5rem;">📊</span> Google Tag Manager
+                        </h4>
+                        <div id="gtmDetails">
+                            <p style="color: var(--text-secondary);">Not detected</p>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 25px;">
+                        <h4 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5rem;">📈</span> Google Analytics
+                        </h4>
+                        <div id="gaDetails">
+                            <p style="color: var(--text-secondary);">Not detected</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Server-Side Section -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 25px;">
+                    <h4 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">🖥️</span> Server-Side Tracking
+                    </h4>
+                    <div id="serverSideDetails">
+                        <p style="color: var(--text-secondary);">Not detected</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="security">
+                <h3 style="margin: 30px 0 20px;">Security Analysis</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- SSL Certificate -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 25px;">
+                        <h4 style="margin-bottom: 15px;">SSL Certificate</h4>
+                        <div id="sslDetails">
+                            <p style="color: var(--text-secondary);">Checking...</p>
+                        </div>
+                    </div>
+
+                    <!-- Security Headers -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 25px;">
+                        <h4 style="margin-bottom: 15px;">Security Headers</h4>
+                        <div id="securityHeaders">
+                            <p style="color: var(--text-secondary);">Checking...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="export-section">
+                <div class="export-title">Export & Share Your Analysis</div>
+                <div class="export-subtitle">Download your complete tracking analysis report or share it with your team</div>
+                <div class="export-buttons">
+                    <button class="export-btn export-btn-primary" onclick="window.analyzerInstance.exportReport()">
+                        Download Full Report
+                    </button>
+                    <button class="export-btn" onclick="window.analyzerInstance.shareResults()">
+                        Share Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta-section" style="background: var(--bg-card); border: 2px solid var(--border);">
+                <div class="cta-content">
+                    <h2 class="cta-title" style="color: var(--primary);">Need Professional Help with Your Tracking Setup?</h2>
+                    <p class="cta-description" style="color: var(--text-secondary);">
+                        Our team of experts can help you implement server-side tracking, improve your privacy compliance, 
+                        and optimize your analytics setup for better data quality and performance.
+                    </p>
+                    <a href="mailto:privacy@lin3s.com" class="cta-button" style="background: var(--primary); color: var(--bg-dark);">
+                        Contact Our Privacy Experts
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="https://lin3s.com" target="_blank" style="color: var(--primary); text-decoration: none;">LIN3S</a> · Professional web development and digital solutions</p>
+        </div>
+    </div>
+
+    <script>
+        class TrackingAnalyzerPro {
+            constructor() {
+                this.form = document.getElementById('analyzerForm');
+                this.urlInput = document.getElementById('urlInput');
+                this.analyzeBtn = document.getElementById('analyzeBtn');
+                this.loadingSection = document.getElementById('loadingSection');
+                this.resultsSection = document.getElementById('resultsSection');
+                this.notification = document.getElementById('notification');
+                
+                this.API_URL = window.location.origin;
+                this.currentData = null;
+                this.recentUrls = this.loadRecentUrls();
+                
+                this.init();
+            }
+
+            init() {
+                // Pre-fill email if we have it
+                const savedEmail = localStorage.getItem('userEmail');
+                if (savedEmail) {
+                    const emailInput = document.getElementById('emailInputMain');
+                    if (emailInput) {
+                        emailInput.value = savedEmail;
+                    }
+                }
+
+                // Form submission
+                this.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.analyzeWebsite();
+                });
+
+                // URL suggestions
+                this.urlInput.addEventListener('focus', () => this.showSuggestions());
+                this.urlInput.addEventListener('blur', () => {
+                    setTimeout(() => this.hideSuggestions(), 200);
+                });
+
+                // Tab navigation
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
+                });
+
+                // Cookie filter
+                const showAllCheckbox = document.getElementById('showAllCookies');
+                if (showAllCheckbox) {
+                    showAllCheckbox.addEventListener('change', () => this.updateCookiesTable());
+                }
+            }
+
+            async analyzeWebsite() {
+                const url = this.urlInput.value.trim();
+                const email = document.getElementById('emailInputMain').value.trim();
+                
+                if (!this.validateUrl(url)) {
+                    this.showNotification('Please enter a valid URL', 'error');
+                    return;
+                }
+
+                if (!this.validateEmail(email)) {
+                    this.showNotification('Please enter a valid email', 'error');
+                    return;
+                }
+
+                // Save email for future reference
+                localStorage.setItem('userEmail', email);
+
+                // Check cache first - only use if very recent (5 minutes)
+                const cacheKey = btoa(url);
+                const cached = localStorage.getItem(`analysis_${cacheKey}`);
+                if (cached) {
+                    try {
+                        const cachedData = JSON.parse(cached);
+                        const cacheAge = Date.now() - cachedData.timestamp;
+                        // Only use cache if less than 5 minutes old
+                        if (cacheAge < 300000) {
+                            this.currentData = cachedData.data;
+                            this.displayResults(cachedData.data);
+                            this.showNotification('Analysis loaded from recent cache', 'success');
+                            return;
+                        }
+                    } catch (e) {
+                        // Invalid cache, continue with fresh analysis
+                    }
+                }
+
+                this.saveRecentUrl(url);
+                this.showLoading();
+                
+                try {
+                    // Set a longer timeout for the fetch request (3 minutes)
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 180000);
+                    
+                    const response = await fetch(`${this.API_URL}/api/analyze`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            url,
+                            email,  // Enviamos el email al servidor
+                            useCache: false,
+                            deepScan: false
+                        }),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Analysis failed');
+                    }
+
+                    const data = await response.json();
+                    this.currentData = data;
+                    
+                    // Save to local cache for quick re-access
+                    try {
+                        localStorage.setItem(`analysis_${cacheKey}`, JSON.stringify({
+                            timestamp: Date.now(),
+                            data: data
+                        }));
+                    } catch (e) {
+                        // Ignore cache save errors
+                    }
+                    
+                    this.displayResults(data);
+                    
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    
+                    // Handle different error types
+                    if (error.name === 'AbortError') {
+                        this.showNotification('Analysis took too long. Please try again.', 'error');
+                    } else if (error.message.includes('timeout')) {
+                        this.showNotification('The website took too long to load. Please try again.', 'error');
+                    } else if (error.message.includes('Navigation timeout')) {
+                        this.showNotification('Website is too slow or complex. Please try again.', 'error');
+                    } else {
+                        this.showNotification(error.message || 'Analysis failed. Please try again.', 'error');
+                    }
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            validateUrl(url) {
+                try {
+                    const urlObj = new URL(url);
+                    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+                } catch {
+                    return false;
+                }
+            }
+
+            showLoading() {
+                this.analyzeBtn.disabled = true;
+                this.analyzeBtn.textContent = 'Analyzing...';
+                this.loadingSection.classList.add('active');
+                this.resultsSection.classList.remove('active');
+                
+                const steps = [
+                    'Launching browser...',
+                    'Loading website...',
+                    'Detecting consent management...',
+                    'Analyzing cookies...',
+                    'Scanning tracking platforms...',
+                    'Checking server-side implementations...',
+                    'Evaluating security headers...',
+                    'Calculating scores...',
+                    'Generating recommendations...'
+                ];
+                
+                let currentStep = 0;
+                this.progressInterval = setInterval(() => {
+                    if (currentStep < steps.length) {
+                        const progressText = document.getElementById('progressText');
+                        if (progressText) {
+                            progressText.textContent = steps[currentStep];
+                        }
+                        currentStep++;
+                    }
+                }, 3000);
+            }
+
+            hideLoading() {
+                clearInterval(this.progressInterval);
+                this.loadingSection.classList.remove('active');
+                this.analyzeBtn.disabled = false;
+                this.analyzeBtn.textContent = 'Start Analysis';
+            }
+
+            displayResults(data) {
+                // Scores - Con verificación
+                const overallScoreEl = document.getElementById('overallScore');
+                if (overallScoreEl) overallScoreEl.textContent = data.scoring.overall;
+                
+                const gradeEl = document.getElementById('grade');
+                if (gradeEl) gradeEl.textContent = data.scoring.grade;
+                
+                const privacyScoreEl = document.getElementById('privacyScore');
+                if (privacyScoreEl) privacyScoreEl.textContent = data.scoring.privacy;
+                
+                const performanceScoreEl = document.getElementById('performanceScore');
+                if (performanceScoreEl) performanceScoreEl.textContent = data.scoring.performance;
+                
+                const implementationScoreEl = document.getElementById('implementationScore');
+                if (implementationScoreEl) implementationScoreEl.textContent = data.scoring.implementation;
+                
+                const securityScoreEl = document.getElementById('securityScore');
+                if (securityScoreEl) securityScoreEl.textContent = data.scoring.security || '-';
+
+                // Cookie Summary - Con verificación
+                const cookies = data.cookies || [];
+                const totalCookiesEl = document.getElementById('totalCookies');
+                if (totalCookiesEl) totalCookiesEl.textContent = cookies.length;
+                
+                const firstPartyCookiesEl = document.getElementById('firstPartyCookies');
+                if (firstPartyCookiesEl) {
+                    firstPartyCookiesEl.textContent = cookies.filter(c => c.type === 'First-party').length;
+                }
+                
+                const thirdPartyCookiesEl = document.getElementById('thirdPartyCookies');
+                if (thirdPartyCookiesEl) {
+                    thirdPartyCookiesEl.textContent = cookies.filter(c => c.type === 'Third-party').length;
+                }
+                
+                const violationCookiesEl = document.getElementById('violationCookies');
+                if (violationCookiesEl) {
+                    violationCookiesEl.textContent = cookies.filter(c => c.status === 'violation' || c.status === 'expired').length;
+                }
+
+                // Overview Stats
+                this.updateOverviewStats(data);
+
+                // Tracking Platforms
+                this.displayTrackingPlatforms(data);
+
+                // Cookies Table
+                this.updateCookiesTable();
+
+                // Implementation Details
+                this.displayImplementation(data);
+
+                // Security Details
+                this.displaySecurity(data);
+
+                // Recommendations
+                this.displayRecommendations(data);
+
+                // Show results
+                this.resultsSection.classList.add('active');
+                this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            updateOverviewStats(data) {
+                // Collect all analytics tools
+                let analyticsTools = [];
+                let adPlatforms = [];
+
+                // Check various sources for analytics tools
+                if (data.googleAnalytics && data.googleAnalytics.length > 0) {
+                    analyticsTools.push('Google Analytics');
+                }
+                if (data.googleTagManager) {
+                    analyticsTools.push('GTM');
+                }
+                if (data.analyticsTools) {
+                    Object.keys(data.analyticsTools).forEach(tool => {
+                        if (data.analyticsTools[tool] && !analyticsTools.includes(tool)) {
+                            analyticsTools.push(tool);
+                        }
+                    });
+                }
+
+                // Check for ad platforms
+                if (data.adsPlatforms) {
+                    Object.keys(data.adsPlatforms).forEach(platform => {
+                        if (data.adsPlatforms[platform]) {
+                            adPlatforms.push(platform);
+                        }
+                    });
+                }
+
+                // Update analytics details with names (max 3 shown) - CON VERIFICACIÓN
+                let analyticsText = '0';
+                if (analyticsTools.length > 0) {
+                    const displayTools = analyticsTools.slice(0, 3);
+                    analyticsText = `${analyticsTools.length} (${displayTools.join(', ')}${analyticsTools.length > 3 ? '...' : ''})`;
+                }
+                const analyticsDetailsEl = document.getElementById('analyticsDetails');
+                if (analyticsDetailsEl) analyticsDetailsEl.textContent = analyticsText;
+
+                // Update ad platforms details with names (max 3 shown) - CON VERIFICACIÓN
+                let adsText = '0';
+                if (adPlatforms.length > 0) {
+                    const displayPlatforms = adPlatforms.slice(0, 3);
+                    adsText = `${adPlatforms.length} (${displayPlatforms.join(', ')}${adPlatforms.length > 3 ? '...' : ''})`;
+                }
+                const adsDetailsEl = document.getElementById('adsDetails');
+                if (adsDetailsEl) adsDetailsEl.textContent = adsText;
+
+                // SSL Status - CON VERIFICACIÓN
+                const sslStatus = data.ssl && data.ssl.enabled ? 
+                    '<span style="color: var(--success);">✓ Enabled</span>' : 
+                    '<span style="color: var(--danger);">✗ Disabled</span>';
+                const sslStatusElement = document.getElementById('sslStatus');
+                if (sslStatusElement) {
+                    sslStatusElement.innerHTML = sslStatus;
+                }
+
+                // Consent Status - CON VERIFICACIÓN
+                let consentStatus = '<span style="color: var(--warning);">⚠ Not detected</span>';
+                if (data.consentManagement && data.consentManagement.detected) {
+                    const platform = data.consentManagement.platform || 'Unknown';
+                    consentStatus = `<span style="color: var(--success);">✓ ${platform}</span>`;
+                }
+                const consentStatusElement = document.getElementById('consentStatus');
+                if (consentStatusElement) {
+                    consentStatusElement.innerHTML = consentStatus;
+                }
+
+                // Load Time - CON VERIFICACIÓN
+                const loadTime = data.performanceMetrics.pageLoadTime;
+                const loadTimeText = loadTime ? `${(loadTime / 1000).toFixed(2)}s` : '-';
+                const loadTimeColor = loadTime < 3000 ? 'var(--success)' : 
+                                     loadTime < 7000 ? 'var(--warning)' : 'var(--danger)';
+                const loadTimeElement = document.getElementById('loadTime');
+                if (loadTimeElement) {
+                    loadTimeElement.innerHTML = `<span style="color: ${loadTimeColor};">${loadTimeText}</span>`;
+                }
+
+                // Key Issues - CON VERIFICACIÓN
+                const keyIssuesDiv = document.getElementById('keyIssues');
+                if (keyIssuesDiv) {
+                    if (data.issues && data.issues.length > 0) {
+                        const topIssues = data.issues.slice(0, 3);
+                        keyIssuesDiv.innerHTML = topIssues.map(issue => `
+                            <div style="margin-bottom: 10px; padding: 10px; background: rgba(220, 53, 69, 0.1); border-left: 3px solid var(--danger); border-radius: 4px;">
+                                <strong>${issue.title}</strong><br>
+                                <span style="font-size: 0.9rem; color: var(--text-secondary);">${issue.impact}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        keyIssuesDiv.innerHTML = '<p style="color: var(--success);">✓ No critical issues detected</p>';
+                    }
+                }
+            }
+
+            displayTrackingPlatforms(data) {
+                // Update trackers table
+                const tableBody = document.getElementById('trackersTableBody');
+                const trackersCount = document.getElementById('trackersCount');
+                
+                // Collect all trackers in a unified format
+                const trackers = [];
+                
+                // Helper function to determine location
+                const getDataLocation = (endpoints, isServerSide, hasCustomDomain) => {
+                    if (!endpoints || endpoints.length === 0) return 'US';
+                    
+                    // Check for common CDNs and regions
+                    const endpoint = endpoints[0];
+                    if (endpoint.includes('europe') || endpoint.includes('.eu.')) return 'EU';
+                    if (endpoint.includes('asia') || endpoint.includes('.ap.')) return 'ASIA';
+                    if (hasCustomDomain) return 'Own servers';
+                    if (endpoint.includes('cloudflare')) return 'CDN (Global)';
+                    if (endpoint.includes('fastly')) return 'CDN (Global)';
+                    if (endpoint.includes('akamai')) return 'CDN (Global)';
+                    
+                    // Default to US for most tracking services
+                    return 'US';
+                };
+                
+                // Helper function to get category
+                const getCategory = (platform) => {
+                    const analyticsTools = ['Google Analytics', 'Segment', 'Amplitude', 'Mixpanel', 'Hotjar', 'Microsoft Clarity'];
+                    const advertisingTools = ['Meta Pixel', 'Google Ads', 'LinkedIn', 'Twitter', 'Pinterest', 'TikTok'];
+                    
+                    if (analyticsTools.some(tool => platform.includes(tool))) return 'Analytics';
+                    if (advertisingTools.some(tool => platform.includes(tool))) return 'Advertising';
+                    return 'Marketing';
+                };
+                
+                // Helper function to get status
+                const getStatus = (isServerSide, hasIssues) => {
+                    if (isServerSide) return { text: 'All good', color: '#4caf50', bg: 'rgba(76, 175, 80, 0.1)' };
+                    if (hasIssues) return { text: 'Has issues', color: '#ff9800', bg: 'rgba(255, 152, 0, 0.1)' };
+                    return { text: 'Improve', color: '#ff9800', bg: 'rgba(255, 152, 0, 0.1)' };
+                };
+                
+                // Process Google Analytics
+                if (data.googleAnalytics && data.googleAnalytics.length > 0) {
+                    data.googleAnalytics.forEach(ga => {
+                        // Solo es realmente server-side si NO usa endpoints de Google
+                        const isRealServerSide = ga.serverSide && ga.endpoint && !ga.endpoint.includes('google');
+                        
+                        trackers.push({
+                            platform: 'Google Analytics 4',
+                            category: 'Analytics',
+                            location: getDataLocation([ga.endpoint], isRealServerSide, false),
+                            method: isRealServerSide ? 'Server-side' : 'Client-side',
+                            status: getStatus(isRealServerSide, false),
+                            id: ga.id
+                        });
+                    });
+                }
+                
+                // Process Meta Pixel
+                if (data.metaPixel) {
+                    trackers.push({
+                        platform: 'Meta',
+                        category: 'Advertising',
+                        location: 'US',
+                        method: data.metaPixel.hasServerSide ? 'Server-side' : 'Client-side',
+                        status: getStatus(data.metaPixel.hasServerSide, false),
+                        id: data.metaPixel.pixelId
+                    });
+                }
+                
+                // Process other advertising platforms
+                if (data.adsPlatforms) {
+                    Object.entries(data.adsPlatforms).forEach(([platform, info]) => {
+                        if (info && !platform.includes('Meta') && !platform.includes('Facebook')) {
+                            trackers.push({
+                                platform: platform.replace(' Pixel', '').replace(' Tag', ''),
+                                category: 'Advertising',
+                                location: getDataLocation(info.endpoints, info.hasServerSide, false),
+                                method: info.hasServerSide ? 'Server-side' : 'Client-side',
+                                status: getStatus(info.hasServerSide, false)
+                            });
+                        }
+                    });
+                }
+                
+                // Process analytics tools
+                if (data.analyticsTools) {
+                    Object.entries(data.analyticsTools).forEach(([platform, info]) => {
+                        if (info && !platform.includes('Google Analytics')) {
+                            trackers.push({
+                                platform: platform,
+                                category: getCategory(platform),
+                                location: getDataLocation(info.endpoints, info.hasServerSide, false),
+                                method: info.hasServerSide ? 'Server-side' : 'Client-side',
+                                status: getStatus(info.hasServerSide, false)
+                            });
+                        }
+                    });
+                }
+                
+                // Process marketing tools
+                if (data.marketingTools) {
+                    Object.entries(data.marketingTools).forEach(([platform, info]) => {
+                        if (info) {
+                            trackers.push({
+                                platform: platform,
+                                category: 'Marketing',
+                                location: getDataLocation(info.endpoints, info.hasServerSide, false),
+                                method: info.hasServerSide ? 'Server-side' : 'Client-side',
+                                status: getStatus(info.hasServerSide, false)
+                            });
+                        }
+                    });
+                }
+                
+                // Update count
+                if (trackersCount) trackersCount.textContent = `(${trackers.length})`;
+                
+                // Render table
+                if (tableBody) {
+                    if (trackers.length > 0) {
+                        tableBody.innerHTML = trackers.map(tracker => `
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                <td style="padding: 16px 12px; font-weight: 500;">
+                                    ${tracker.platform}
+                                    ${tracker.id ? `<span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top: 2px;">${tracker.id}</span>` : ''}
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span style="display: inline-block; padding: 4px 12px; background: rgba(255, 255, 255, 0.05); 
+                                               border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                                        ${tracker.category}
+                                    </span>
+                                </td>
+                                <td style="padding: 16px 12px; color: var(--text-secondary);">
+                                    ${tracker.location}
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span style="color: ${tracker.method === 'Server-side' ? 'var(--success)' : 'var(--warning)'};">
+                                        ${tracker.method}
+                                    </span>
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span style="display: inline-block; padding: 6px 14px; 
+                                               background: ${tracker.status.bg}; color: ${tracker.status.color};
+                                               border-radius: 6px; font-size: 0.85rem; font-weight: 600;">
+                                        ${tracker.status.text}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+                                    No tracking platforms detected
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }
+            }
+
+            displayImplementation(data) {
+                // GTM Details - CON VERIFICACIÓN
+                const gtmDetails = document.getElementById('gtmDetails');
+                if (gtmDetails) {
+                    if (data.gtmConfig) {
+                        gtmDetails.innerHTML = `
+                            <p><strong>Container ID:</strong> ${data.gtmConfig.id}</p>
+                            <p><strong>First-Party Mode:</strong> ${data.gtmConfig.firstPartyMode ? 
+                                '<span style="color: var(--success);">✓ Enabled</span>' : 
+                                '<span style="color: var(--warning);">✗ Disabled</span>'}</p>
+                            <p><strong>Loaded From:</strong> ${data.gtmConfig.loadedFrom}</p>
+                            ${data.gtmConfig.customDomain ? `<p><strong>Custom Domain:</strong> ${data.gtmConfig.customDomain}</p>` : ''}
+                        `;
+                    } else {
+                        gtmDetails.innerHTML = '<p style="color: var(--text-secondary);">Google Tag Manager not detected</p>';
+                    }
+                }
+
+                // GA Details - CON VERIFICACIÓN
+                const gaDetails = document.getElementById('gaDetails');
+                if (gaDetails) {
+                    if (data.googleAnalytics && data.googleAnalytics.length > 0) {
+                        gaDetails.innerHTML = data.googleAnalytics.map(ga => `
+                            <div style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+                                <p><strong>ID:</strong> ${ga.id}</p>
+                                <p><strong>Version:</strong> ${ga.version}</p>
+                                <p><strong>Type:</strong> 
+                                    <span style="color: ${ga.serverSide ? 'var(--success)' : 'var(--warning)'};">
+                                        ${ga.type}
+                                    </span>
+                                </p>
+                                <p><strong>Endpoint:</strong> <code>${ga.endpoint}</code></p>
+                            </div>
+                        `).join('');
+                    } else {
+                        gaDetails.innerHTML = '<p style="color: var(--text-secondary);">Google Analytics not detected</p>';
+                    }
+                }
+
+                // Server-Side Details - CON VERIFICACIÓN
+                const serverSideDetails = document.getElementById('serverSideDetails');
+                if (serverSideDetails) {
+                    if (data.serverSideTracking && data.serverSideTracking.detected) {
+                        serverSideDetails.innerHTML = `
+                            <p style="color: var(--success);"><strong>✓ Server-side tracking detected</strong></p>
+                            <p><strong>Platforms:</strong> ${data.serverSideTracking.platforms.join(', ')}</p>
+                            <p><strong>Confidence:</strong> ${data.serverSideTracking.confidence}%</p>
+                        `;
+                    } else {
+                        serverSideDetails.innerHTML = '<p style="color: var(--warning);">⚠ No server-side tracking detected</p>';
+                    }
+                }
+            }
+
+            displaySecurity(data) {
+                // SSL Details - CON VERIFICACIÓN
+                const sslDetails = document.getElementById('sslDetails');
+                if (sslDetails) {
+                    if (data.ssl) {
+                        sslDetails.innerHTML = `
+                            <p><strong>Status:</strong> ${data.ssl.enabled ? 
+                                '<span style="color: var(--success);">✓ Enabled</span>' : 
+                                '<span style="color: var(--danger);">✗ Disabled</span>'}</p>
+                            ${data.ssl.protocol ? `<p><strong>Protocol:</strong> ${data.ssl.protocol}</p>` : ''}
+                            ${data.ssl.issuer ? `<p><strong>Issuer:</strong> ${data.ssl.issuer}</p>` : ''}
+                        `;
+                    } else {
+                        sslDetails.innerHTML = '<p style="color: var(--text-secondary);">SSL information not available</p>';
+                    }
+                }
+
+                // Security Headers - CON VERIFICACIÓN
+                const headersDiv = document.getElementById('securityHeaders');
+                if (headersDiv) {
+                    if (data.securityHeaders) {
+                        const headers = [
+                            { name: 'Content Security Policy', key: 'csp' },
+                            { name: 'Strict Transport Security', key: 'hsts' },
+                            { name: 'X-Frame-Options', key: 'xFrameOptions' },
+                            { name: 'X-Content-Type-Options', key: 'xContentType' }
+                        ];
+
+                        headersDiv.innerHTML = headers.map(header => {
+                            const status = data.securityHeaders[header.key];
+                            const isPresent = status === 'Present';
+                            return `
+                                <p>
+                                    ${isPresent ? '✓' : '✗'} ${header.name}: 
+                                    <span style="color: ${isPresent ? 'var(--success)' : 'var(--warning)'};">
+                                        ${status || 'Not checked'}
+                                    </span>
+                                </p>
+                            `;
+                        }).join('');
+                    } else {
+                        headersDiv.innerHTML = '<p style="color: var(--text-secondary);">Security headers not analyzed</p>';
+                    }
+                }
+            }
+
+            displayRecommendations(data) {
+                const container = document.getElementById('recommendationsList');
+                if (!container) return;
+                
+                // Check for implemented features
+                const implemented = [];
+                const pending = data.recommendations || [];
+                
+                // Check what's already implemented based on the data
+                if (data.gtmConfig && data.gtmConfig.customDomain) {
+                    implemented.push({
+                        title: 'Custom subdomain for server GTM container',
+                        description: 'Your GTM server container is using a custom domain',
+                        detail: `Domain: ${data.gtmConfig.customDomain}`
+                    });
+                }
+                
+                // Only count REAL server-side GA (with custom domain endpoint)
+                if (data.googleAnalytics && data.googleAnalytics.some(ga => ga.serverSide && ga.endpoint && !ga.endpoint.includes('google'))) {
+                    const serverSideGA = data.googleAnalytics.filter(ga => ga.serverSide && ga.endpoint && !ga.endpoint.includes('google'));
+                    implemented.push({
+                        title: 'Server-side tracking infrastructure',
+                        description: 'Google Analytics 4 with server-side tracking is active',
+                        detail: `${serverSideGA.length} server-side ID(s) detected`
+                    });
+                }
+                
+                if (data.consentManagement && data.consentManagement.detected) {
+                    implemented.push({
+                        title: 'Consent Management Platform',
+                        description: 'Cookie consent is implemented',
+                        detail: `Platform: ${data.consentManagement.platform}`
+                    });
+                }
+                
+                let implementedHtml = '';
+                
+                // Show implemented features first
+                if (implemented.length > 0) {
+                    implementedHtml = `
+                        <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(76, 175, 80, 0.1) 100%); 
+                                    border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+                            <h3 style="margin-bottom: 20px; color: var(--success); display: flex; align-items: center; gap: 10px;">
+                                ✅ Already Implemented
+                            </h3>
+                            <div style="display: grid; gap: 15px;">
+                                ${implemented.map(item => `
+                                    <div style="padding: 15px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; 
+                                               border-left: 3px solid var(--success);">
+                                        <h4 style="margin-bottom: 5px; color: var(--primary); font-size: 1rem;">
+                                            ${item.title}
+                                        </h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 5px 0;">
+                                            ${item.description}
+                                        </p>
+                                        ${item.detail ? `
+                                            <p style="color: var(--success); font-size: 0.85rem; margin-top: 5px; opacity: 0.9;">
+                                                ${item.detail}
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Show recommendations with focus on tracking improvements
+                if (pending.length > 0) {
+                    const recommendationsHtml = `
+                        <h3 style="margin-bottom: 20px;">Recommendations for Improvement</h3>
+                        ${pending.map((rec, index) => {
+                            const priorityColor = rec.priority === 'critical' ? 'var(--danger)' :
+                                                rec.priority === 'high' ? 'var(--warning)' :
+                                                'var(--info)';
+                            
+                            // Categories badges
+                            const categoriesBadges = rec.categories ? 
+                                rec.categories.map(cat => `
+                                    <span style="display: inline-block; padding: 3px 10px; background: rgba(255,255,255,0.05); 
+                                               border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; 
+                                               font-size: 0.75rem; margin-right: 6px; color: var(--text-secondary);">
+                                        ${cat}
+                                    </span>
+                                `).join('') : '';
+                            
+                            // Benefits list
+                            const benefitsList = rec.benefits ? 
+                                `<div style="margin-top: 20px;">
+                                    <h5 style="color: var(--primary); margin-bottom: 12px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Benefits
+                                    </h5>
+                                    <ol style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                                        ${rec.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+                                    </ol>
+                                </div>` : '';
+                            
+                            return `
+                                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; 
+                                           padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden;">
+                                    
+                                    <!-- Effort/Impact badge instead of score -->
+                                    ${rec.effort && rec.impact ? `
+                                        <div style="position: absolute; top: 20px; right: 20px; text-align: right;">
+                                            <div style="font-size: 0.85rem; margin-bottom: 4px;">
+                                                <span style="color: var(--text-secondary);">Effort:</span> 
+                                                <span style="color: var(--primary); font-weight: 600; text-transform: capitalize;">
+                                                    ${rec.effort}
+                                                </span>
+                                            </div>
+                                            <div style="font-size: 0.85rem;">
+                                                <span style="color: var(--text-secondary);">Impact:</span> 
+                                                <span style="color: ${rec.impact === 'very high' || rec.impact === 'high' ? 'var(--success)' : 
+                                                                     rec.impact === 'medium' ? 'var(--warning)' : 'var(--info)'}; 
+                                                       font-weight: 600; text-transform: capitalize;">
+                                                    ${rec.impact}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <!-- Header with number and title -->
+                                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 15px;">
+                                        <div style="display: flex; align-items: center; justify-content: center; 
+                                                   width: 40px; height: 40px; background: ${priorityColor}20; 
+                                                   border-radius: 8px; flex-shrink: 0;">
+                                            <span style="font-size: 1.2rem; font-weight: 700; color: ${priorityColor};">
+                                                ${index + 1}
+                                            </span>
+                                        </div>
+                                        <div style="flex: 1; margin-right: 120px;">
+                                            <h4 style="margin-bottom: 8px; font-size: 1.15rem; color: var(--primary);">
+                                                ${rec.title}
+                                            </h4>
+                                            <div style="margin-bottom: 12px;">
+                                                ${categoriesBadges}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Description -->
+                                    <div style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 10px; 
+                                               padding-left: 56px; font-size: 0.95rem;">
+                                        ${rec.description}
+                                    </div>
+                                    
+                                    <!-- Benefits -->
+                                    <div style="padding-left: 56px;">
+                                        ${benefitsList}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    `;
+                    
+                    container.innerHTML = implementedHtml + recommendationsHtml;
+                } else if (implemented.length > 0) {
+                    // Only implemented features, no pending recommendations
+                    container.innerHTML = implementedHtml + `
+                        <div style="background: var(--bg-card); border: 1px solid var(--success); border-radius: 12px; 
+                                   padding: 40px; text-align: center;">
+                            <h3 style="color: var(--success); margin-bottom: 12px;">Perfect Setup!</h3>
+                            <p style="color: var(--text-secondary);">
+                                All major tracking optimizations are already implemented. Your setup is excellent!
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    // No data at all
+                    container.innerHTML = `
+                        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; 
+                                   padding: 40px; text-align: center;">
+                            <p style="color: var(--text-secondary);">
+                                No recommendations available.
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+
+            updateCookiesTable() {
+                const tbody = document.getElementById('cookiesTableBody');
+                const showAll = document.getElementById('showAllCookies') ? document.getElementById('showAllCookies').checked : false;
+                
+                if (!tbody) return;
+                
+                if (!this.currentData || !this.currentData.cookies) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px;">No data available</td></tr>';
+                    return;
+                }
+
+                const cookies = this.currentData.cookies;
+                const displayCookies = showAll ? cookies : 
+                    cookies.filter(c => c.status === 'violation' || c.status === 'warning' || c.status === 'expired');
+
+                if (displayCookies.length === 0) {
+                    tbody.innerHTML = showAll ? 
+                        '<tr><td colspan="7" style="text-align: center; padding: 30px;">No cookies found</td></tr>' :
+                        '<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--success);">✓ No problematic cookies detected</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = displayCookies.map(cookie => `
+                    <tr>
+                        <td><strong>${cookie.name}</strong></td>
+                        <td style="font-size: 0.85rem;">${cookie.domain}</td>
+                        <td>
+                            <span style="color: ${cookie.type === 'Third-party' ? 'var(--warning)' : 'var(--text-primary)'};">
+                                ${cookie.type}
+                            </span>
+                        </td>
+                        <td>${cookie.purpose || 'Unknown'}</td>
+                        <td>
+                            <span style="color: ${cookie.status === 'expired' ? 'var(--danger)' : 'inherit'};">
+                                ${cookie.expiry}
+                            </span>
+                        </td>
+                        <td>${cookie.gdprCategory || '-'}</td>
+                        <td>
+                            ${this.getStatusBadge(cookie.status)}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            getStatusBadge(status) {
+                const badges = {
+                    'ok': '<span class="status-badge success">OK</span>',
+                    'warning': '<span class="status-badge warning">Review</span>',
+                    'violation': '<span class="status-badge danger">Violation</span>',
+                    'expired': '<span class="status-badge danger">Expired</span>',
+                    'compliant': '<span class="status-badge success">Compliant</span>'
+                };
+                return badges[status] || '<span class="status-badge">Unknown</span>';
+            }
+
+            switchTab(tabName) {
+                // Update tab buttons
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.tab === tabName);
+                });
+
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.toggle('active', content.id === tabName);
+                });
+            }
+
+            showSuggestions() {
+                const suggestions = document.getElementById('suggestions');
+                if (suggestions && this.recentUrls.length > 0) {
+                    suggestions.innerHTML = this.recentUrls.map(url => `
+                        <div class="suggestion-item" onclick="document.getElementById('urlInput').value='${url}'">
+                            <img src="https://www.google.com/s2/favicons?domain=${new URL(url).hostname}" class="suggestion-icon" alt="">
+                            <span>${url}</span>
+                        </div>
+                    `).join('');
+                    suggestions.classList.add('active');
+                }
+            }
+
+            hideSuggestions() {
+                const suggestions = document.getElementById('suggestions');
+                if (suggestions) {
+                    suggestions.classList.remove('active');
+                }
+            }
+
+            saveRecentUrl(url) {
+                if (!this.recentUrls.includes(url)) {
+                    this.recentUrls.unshift(url);
+                    this.recentUrls = this.recentUrls.slice(0, 5);
+                    localStorage.setItem('recentUrls', JSON.stringify(this.recentUrls));
+                }
+            }
+
+            loadRecentUrls() {
+                try {
+                    return JSON.parse(localStorage.getItem('recentUrls') || '[]');
+                } catch {
+                    return [];
+                }
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = this.notification;
+                notification.className = `notification show ${type}`;
+                const notificationText = notification.querySelector('.notification-text');
+                if (notificationText) {
+                    notificationText.textContent = message;
+                }
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            exportReport() {
+                if (!this.currentData) {
+                    this.showNotification('No data to export', 'error');
+                    return;
+                }
+                
+                const report = this.generateTextReport(this.currentData);
+                this.downloadFile(report, 'tracking-analysis-report.txt', 'text/plain');
+            }
+
+            shareResults() {
+                if (!this.currentData) {
+                    this.showNotification('No data to share', 'error');
+                    return;
+                }
+                
+                const shareUrl = `${window.location.origin}?url=${encodeURIComponent(this.currentData.url)}`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Website Tracking Analysis',
+                        text: `Analysis for ${this.currentData.url} - Score: ${this.currentData.scoring.overall}/100`,
+                        url: shareUrl
+                    }).catch(err => {
+                        if (err.name !== 'AbortError') {
+                            this.copyToClipboard(shareUrl);
+                        }
+                    });
+                } else {
+                    this.copyToClipboard(shareUrl);
+                }
+            }
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showNotification('Share link copied to clipboard', 'success');
+                }).catch(() => {
+                    this.showNotification('Could not copy link', 'error');
+                });
+            }
+
+            generateTextReport(data) {
+                return `WEBSITE TRACKING ANALYSIS REPORT
+=====================================
+URL: ${data.url}
+Date: ${new Date(data.timestamp).toLocaleString()}
+Domain: ${data.domain}
+
+SCORES
+------
+Overall: ${data.scoring.overall}/100 (${data.scoring.grade})
+Privacy: ${data.scoring.privacy}/100
+Performance: ${data.scoring.performance}/100
+Implementation: ${data.scoring.implementation}/100
+Security: ${data.scoring.security || 'N/A'}/100
+
+COOKIES (${data.cookies.length} total)
+-------
+First-party: ${data.cookies.filter(c => c.type === 'First-party').length}
+Third-party: ${data.cookies.filter(c => c.type === 'Third-party').length}
+Violations: ${data.cookies.filter(c => c.status === 'violation').length}
+
+${data.recommendations && data.recommendations.length > 0 ? `
+RECOMMENDATIONS
+---------------
+${data.recommendations.map(rec => typeof rec === 'string' ? `• ${rec}` : `• ${rec.title}: ${rec.description}`).join('\n')}` : ''}
+
+=====================================
+Need help with your tracking setup?
+Contact our experts: privacy@lin3s.com
+`;
+            }
+
+            downloadFile(content, filename, type) {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showNotification('File downloaded successfully', 'success');
+            }
+        }
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.analyzerInstance = new TrackingAnalyzerPro();
+            
+            // Check for shared URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedUrl = urlParams.get('url');
+            if (sharedUrl) {
+                const urlInput = document.getElementById('urlInput');
+                if (urlInput) {
+                    urlInput.value = sharedUrl;
+                    // Auto-analyze if URL is provided
+                    setTimeout(() => {
+                        window.analyzerInstance.analyzeWebsite();
+                    }, 500);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
