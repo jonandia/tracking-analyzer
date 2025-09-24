@@ -22,7 +22,7 @@ const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60000; // 1 minuto
 const MAX_REQUESTS_PER_WINDOW = 10;
 
-// Puppeteer config for production (Render.com)
+// Puppeteer config for production (Render.com) and local development
 const puppeteerConfig = process.env.PUPPETEER_EXECUTABLE_PATH
   ? {
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
@@ -42,12 +42,22 @@ const puppeteerConfig = process.env.PUPPETEER_EXECUTABLE_PATH
       ]
     }
   : {
-      headless: 'new',
+      headless: process.env.HEADLESS !== 'false' ? 'new' : false, // Allow visible browser for debugging
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage'
-      ]
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--disable-blink-features=AutomationControlled',
+        '--window-size=1920,1080',
+        '--start-maximized'
+      ],
+      defaultViewport: null,
+      ignoreHTTPSErrors: true,
+      // Increase protocol timeout
+      protocolTimeout: 120000
     };
 
 // Configuration
@@ -160,6 +170,7 @@ class BrowserPool {
         this.size = size;
         this.browsers = [];
         this.available = [];
+        this.creating = false;
     }
     
     async init() {
@@ -168,22 +179,55 @@ class BrowserPool {
     }
     
     async createBrowser() {
-        return await puppeteer.launch(puppeteerConfig);
+        try {
+            this.creating = true;
+            console.log('Creating new browser instance...');
+            
+            const browser = await puppeteer.launch(puppeteerConfig);
+            
+            // Test that browser is working
+            const version = await browser.version();
+            console.log('Browser created successfully:', version);
+            
+            return browser;
+        } catch (error) {
+            console.error('Failed to create browser:', error.message);
+            throw error;
+        } finally {
+            this.creating = false;
+        }
     }
     
     async getBrowser() {
+        // Always create new browser for each request to avoid connection issues
         return await this.createBrowser();
     }
     
-    releaseBrowser(browser) {
+    async releaseBrowser(browser) {
         if (browser) {
-            browser.close().catch(console.error);
+            try {
+                const pages = await browser.pages();
+                for (const page of pages) {
+                    try {
+                        await page.close();
+                    } catch (e) {
+                        // Ignore page close errors
+                    }
+                }
+                await browser.close();
+            } catch (error) {
+                console.error('Error closing browser:', error.message);
+            }
         }
     }
     
     async closeAll() {
         for (const browser of this.browsers) {
-            await browser.close();
+            try {
+                await browser.close();
+            } catch (e) {
+                // Ignore close errors
+            }
         }
         this.browsers = [];
         this.available = [];
@@ -268,16 +312,28 @@ async function analyzeTrackingRequest(requestUrl, method, request, report, adTra
         requestUrl.includes('google-analytics.com') || requestUrl.includes('analytics.google.com')) {
         
         const measurementId = params.get('tid') || params.get('id') || 
-                            params.get('measurement_id') || extractFromPath(pathname, 'G-');
+                            params.get('measurement_id') || extractFromPath(pathname, 'G-') || 
+                            extractFromPath(pathname, 'UA-');
         
         if (measurementId) {
-            const isServerSide = !endpoint.includes('google') || endpoint.includes(pageHostname);
+            // Determinar versión basada en el ID
+            let version = 'Unknown';
+            if (measurementId.startsWith('G-')) {
+                version = 'GA4';
+            } else if (measurementId.startsWith('UA-')) {
+                version = 'Universal Analytics';
+            }
+            
+            // Solo es server-side si el endpoint NO es de Google
+            const isServerSide = !endpoint.includes('google-analytics.com') && 
+                                !endpoint.includes('analytics.google.com') && 
+                                !endpoint.includes('google.com');
             
             const existing = report.googleAnalytics.find(ga => ga.id === measurementId);
             if (!existing) {
                 report.googleAnalytics.push({
                     id: measurementId,
-                    version: measurementId.startsWith('G-') ? 'GA4' : 'Universal Analytics',
+                    version: version,
                     endpoint: endpoint,
                     type: isServerSide ? 'Server-side' : 'Client-side',
                     serverSide: isServerSide,
@@ -300,10 +356,15 @@ async function analyzeTrackingRequest(requestUrl, method, request, report, adTra
             report.googleTagManager = gtmMatch[1];
             
             // Enhanced GTM configuration
+            // First-party mode es cuando el script GTM.js se carga desde un subdominio propio, NO desde googletagmanager.com
+            const isFirstPartyMode = !endpoint.includes('googletagmanager.com') && 
+                                    !endpoint.includes('www.googletagmanager.com') &&
+                                    endpoint.includes(pageHostname);
+            
             report.gtmConfig = {
                 id: gtmMatch[1],
                 loadedFrom: endpoint,
-                firstPartyMode: !endpoint.includes('googletagmanager.com'),
+                firstPartyMode: isFirstPartyMode,
                 serverContainer: pathname.includes('/ss/'),
                 customDomain: endpoint.includes(pageHostname) ? endpoint : null,
                 serverInfo: endpoint.includes(pageHostname) ? { cdn: 'Own servers', region: 'Custom' } : serverInfo
@@ -346,7 +407,7 @@ async function analyzeTrackingRequest(requestUrl, method, request, report, adTra
 
 // Helper function
 function extractFromPath(pathname, prefix) {
-    const match = pathname.match(new RegExp(`${prefix}([A-Z0-9]+)`));
+    const match = pathname.match(new RegExp(`${prefix}([A-Z0-9-]+)`));
     return match ? prefix + match[1] : null;
 }
 
@@ -441,7 +502,7 @@ async function analyzeWebsite(url, email = null) {
     ]);
 }
 
-// Actual analysis implementation
+// Actual analysis implementation with better error handling
 async function performAnalysis(url, email = null) {
     console.log(`🚀 Starting analysis for ${url}...`);
     if (email) console.log(`📧 Lead captured: ${email}`);
@@ -493,8 +554,38 @@ async function performAnalysis(url, email = null) {
     try {
         const startTime = Date.now();
         
-        browser = await browserPool.getBrowser();
-        page = await browser.newPage();
+        // Get browser with retry logic
+        let browserAttempts = 0;
+        const maxBrowserAttempts = 3;
+        
+        while (browserAttempts < maxBrowserAttempts) {
+            try {
+                browser = await browserPool.getBrowser();
+                break;
+            } catch (error) {
+                browserAttempts++;
+                console.log(`⚠️ Browser creation attempt ${browserAttempts} failed:`, error.message);
+                
+                if (browserAttempts >= maxBrowserAttempts) {
+                    throw new Error('Failed to create browser after multiple attempts');
+                }
+                
+                // Wait before retry
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        
+        if (!browser) {
+            throw new Error('Could not create browser instance');
+        }
+        
+        // Create page with error handling
+        try {
+            page = await browser.newPage();
+        } catch (error) {
+            console.error('Failed to create new page:', error);
+            throw new Error('Browser page creation failed');
+        }
         
         // Enhanced page setup with better user agent
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -524,23 +615,42 @@ async function performAnalysis(url, email = null) {
                     await analyzeTrackingRequest(requestUrl, request.method(), request, report, adTracking, pageHostname);
                 }
             } catch (error) {
-                // Silent error
+                // Silent error - don't break on individual request errors
             }
             
-            request.continue();
+            try {
+                request.continue();
+            } catch (e) {
+                // Request may have been aborted, ignore
+            }
         });
         
         // Response handler for size tracking
         page.on('response', (response) => {
-            const headers = response.headers();
-            if (headers['content-length']) {
-                report.performanceMetrics.totalTransferred += parseInt(headers['content-length']);
+            try {
+                const headers = response.headers();
+                if (headers['content-length']) {
+                    report.performanceMetrics.totalTransferred += parseInt(headers['content-length']);
+                }
+            } catch (e) {
+                // Ignore response errors
             }
         });
         
         // Performance metrics
         page.on('domcontentloaded', () => {
             report.performanceMetrics.domContentLoaded = Date.now() - startTime;
+        });
+        
+        // Add page error handler to catch client-side errors
+        page.on('pageerror', error => {
+            console.log('Page error:', error.message);
+        });
+        
+        // Handle dialog boxes (alerts, confirms, prompts)
+        page.on('dialog', async dialog => {
+            console.log('Dialog detected:', dialog.message());
+            await dialog.accept();
         });
         
         console.log('📡 Navigating to URL...');
@@ -573,12 +683,23 @@ async function performAnalysis(url, email = null) {
                 console.log('⚠️ Second navigation attempt failed, trying with load event...');
                 
                 // Third attempt: Just wait for load event
-                navigationResponse = await page.goto(url, { 
-                    waitUntil: 'load', 
-                    timeout: CONFIG.TIMEOUTS.GLOBAL - 30000 // Leave 30s for rest of analysis
-                });
-                console.log('✅ Page loaded with load event');
-                await page.waitForTimeout(3000);
+                try {
+                    navigationResponse = await page.goto(url, { 
+                        waitUntil: 'load', 
+                        timeout: CONFIG.TIMEOUTS.GLOBAL - 30000 // Leave 30s for rest of analysis
+                    });
+                    console.log('✅ Page loaded with load event');
+                    await page.waitForTimeout(3000);
+                } catch (error3) {
+                    // Final attempt: just navigate without waiting
+                    console.log('⚠️ All standard navigation attempts failed, trying without wait...');
+                    navigationResponse = await page.goto(url, { 
+                        waitUntil: 'commit', 
+                        timeout: 30000
+                    });
+                    await page.waitForTimeout(5000);
+                    console.log('✅ Page navigated with basic commit');
+                }
             }
         }
         
@@ -586,11 +707,18 @@ async function performAnalysis(url, email = null) {
         
         // Check SSL
         if (navigationResponse) {
-            report.ssl = {
-                enabled: url.startsWith('https'),
-                protocol: navigationResponse.securityDetails()?.protocol(),
-                issuer: navigationResponse.securityDetails()?.issuer()
-            };
+            try {
+                const securityDetails = navigationResponse.securityDetails();
+                report.ssl = {
+                    enabled: url.startsWith('https'),
+                    protocol: securityDetails?.protocol(),
+                    issuer: securityDetails?.issuer()
+                };
+            } catch (e) {
+                report.ssl = {
+                    enabled: url.startsWith('https')
+                };
+            }
         }
         
         // Wait for dynamic content (reduced wait time)
@@ -624,7 +752,7 @@ async function performAnalysis(url, email = null) {
             console.log('⚠️ Data collection error:', error.message);
         }
         
-        // Process advertising tracking
+        // Process advertising tracking with corrected server-side detection
         processAdvertisingData(report, adTracking, pageHostname);
         
         // Calculate comprehensive scoring
@@ -650,6 +778,7 @@ async function performAnalysis(url, email = null) {
         
         throw error;
     } finally {
+        // Clean up resources
         if (page) {
             try {
                 await page.close();
@@ -657,7 +786,9 @@ async function performAnalysis(url, email = null) {
                 console.log('Error closing page:', e.message);
             }
         }
-        if (browser) browserPool.releaseBrowser(browser);
+        if (browser) {
+            await browserPool.releaseBrowser(browser);
+        }
     }
 }
 
@@ -789,26 +920,37 @@ function processAdvertisingData(report, adTracking, pageHostname) {
     let hasRealServerSide = false;
     let serverSidePlatforms = [];
     
-    // Check Google Analytics for real server-side (own domain endpoints)
+    // Check Google Analytics for real server-side (non-Google endpoints only)
     if (report.googleAnalytics && report.googleAnalytics.length > 0) {
         report.googleAnalytics.forEach(ga => {
-            // If endpoint contains the page hostname or is clearly a subdomain, it's server-side
-            if (ga.endpoint && (ga.endpoint.includes(pageHostname) || 
-                ga.endpoint.includes('ssapi.') || 
-                ga.endpoint.includes('sgtm.') ||
-                ga.endpoint.includes('analytics.') ||
-                !ga.endpoint.includes('google'))) {
+            // Solo es server-side si el endpoint NO es de Google
+            if (ga.endpoint && 
+                !ga.endpoint.includes('google-analytics.com') && 
+                !ga.endpoint.includes('analytics.google.com') && 
+                !ga.endpoint.includes('google.com')) {
                 hasRealServerSide = true;
                 ga.serverSide = true;
                 ga.type = 'Server-side';
+                
+                // Check if it's using a subdomain of the main domain
+                const mainDomain = pageHostname.replace('www.', '');
+                if (ga.endpoint.includes(mainDomain)) {
+                    ga.usesOwnSubdomain = true;
+                }
+                
                 if (!serverSidePlatforms.includes('Google Analytics')) {
                     serverSidePlatforms.push('Google Analytics');
                 }
+            } else {
+                // Asegurar que se marca como client-side si es endpoint de Google
+                ga.serverSide = false;
+                ga.type = 'Client-side';
+                ga.usesOwnSubdomain = false;
             }
         });
     }
     
-    // Check GTM configuration for custom domain
+    // Check GTM configuration for custom domain (pero NO es first-party mode, eso es diferente)
     if (report.gtmConfig && report.gtmConfig.customDomain) {
         hasRealServerSide = true;
         if (!serverSidePlatforms.includes('Google Tag Manager')) {
@@ -973,14 +1115,6 @@ function calculateEnhancedScoring(report, pageHostname) {
         if (report.gtmConfig && report.gtmConfig.firstPartyMode) {
             implementationScore += 20;
             privacyScore += 10;
-        } else {
-            issues.push({
-                severity: 'medium',
-                category: 'implementation',
-                title: 'GTM First-Party Mode not enabled',
-                description: 'Script loads from googletagmanager.com',
-                impact: '15-30% data loss from ad-blockers'
-            });
         }
     }
     
@@ -1052,43 +1186,69 @@ function calculateEnhancedScoring(report, pageHostname) {
     report.issues = issues;
 }
 
-// Generate smart recommendations with score improvements
+// Generate smart recommendations with corrected logic
 function generateSmartRecommendations(report) {
     const recommendations = [];
     
     // Check what's already implemented
-    const hasCustomDomain = report.gtmConfig && report.gtmConfig.customDomain;
+    const pageHostname = report.domain;
+    
+    // Check if GA is using a subdomain of the main domain (real server-side)
+    const hasServerSideGAWithSubdomain = report.googleAnalytics && 
+        report.googleAnalytics.some(ga => {
+            if (!ga.serverSide || !ga.endpoint) return false;
+            // Check if endpoint is a subdomain of the main domain
+            const mainDomain = pageHostname.replace('www.', '');
+            return ga.endpoint.includes(mainDomain) && ga.endpoint !== mainDomain;
+        });
+    
     const hasServerSideGA = report.googleAnalytics && 
-        report.googleAnalytics.some(ga => ga.serverSide && ga.endpoint && !ga.endpoint.includes('google'));
+        report.googleAnalytics.some(ga => ga.serverSide && ga.endpoint && 
+            !ga.endpoint.includes('google-analytics.com') && 
+            !ga.endpoint.includes('analytics.google.com') && 
+            !ga.endpoint.includes('google.com'));
+    
+    const hasCustomDomain = report.gtmConfig && report.gtmConfig.customDomain;
+    
+    // CORRECCIÓN: First-party mode es cuando GTM.js se carga desde subdominio propio
     const hasGTMFirstParty = report.gtmConfig && report.gtmConfig.firstPartyMode;
     
+    const hasGTM = report.googleTagManager !== null;
+    
     // 1. Custom subdomain for server GTM container
-    if (report.googleTagManager && !hasCustomDomain) {
+    if (hasGTM) {
+        const isImplemented = hasCustomDomain || hasServerSideGAWithSubdomain;
         recommendations.push({
             priority: 'critical',
             title: 'Set up custom subdomain for server GTM container',
             categories: ['Advertising', 'Cookies', 'Analytics'],
             scoreImprovement: 31,
-            description: "We've detected that you're not using own subdomain for your sGTM container. As a result, cookies may not be set correctly, potentially impacting your tracking accuracy.",
+            description: isImplemented ? 
+                "Your tracking is using a custom subdomain, ensuring first-party cookies are set correctly." :
+                "We've detected that you're not using own subdomain for your sGTM container. As a result, cookies may not be set correctly, potentially impacting your tracking accuracy.",
             benefits: [
                 'Set first-party cookies',
                 'Avoid cookie lifespan restrictions',
                 'Improve tracking precision'
             ],
             effort: 'medium',
-            impact: 'very high',
-            howTo: 'Use a subdomain like tracking.yourdomain.com for your GTM server container'
+            impact: 'high',
+            howTo: 'Use a subdomain like tracking.yourdomain.com for your GTM server container',
+            implemented: isImplemented
         });
     }
 
     // 2. Google Analytics 4 server-side tracking
-    if (report.googleAnalytics && report.googleAnalytics.length > 0 && !hasServerSideGA) {
+    if (report.googleAnalytics && report.googleAnalytics.length > 0) {
+        const isImplemented = hasServerSideGA;
         recommendations.push({
             priority: 'high',
             title: 'Implement Google Analytics 4 server-side tracking',
             categories: ['Analytics'],
             scoreImprovement: 17,
-            description: "We've detected a client-side Google Analytics 4 script. While this setup works, client-side tracking is more vulnerable to ad blockers, cookie restrictions, and browser privacy settings issues.",
+            description: isImplemented ?
+                "Google Analytics 4 with server-side tracking is active, providing better data quality and privacy compliance." :
+                "We've detected a client-side Google Analytics 4 script. While this setup works, client-side tracking is more vulnerable to ad blockers, cookie restrictions, and browser privacy settings issues.",
             benefits: [
                 'Ensure complete and precise tracking, even with ad blockers in use',
                 'Align with privacy regulations such as GDPR',
@@ -1096,73 +1256,139 @@ function generateSmartRecommendations(report) {
             ],
             effort: 'high',
             impact: 'high',
-            howTo: 'Set up GA4 server-side tracking through GTM Server Container'
+            howTo: 'Set up GA4 server-side tracking through GTM Server Container',
+            implemented: isImplemented
         });
     }
 
-    // 3. Avoid negative impact of ad blockers
-    if (report.googleTagManager && !hasGTMFirstParty && !hasCustomDomain) {
+    // 3. GTM First-Party Mode - CORRECTED LOGIC
+    if (hasGTM) {
+        const isImplemented = hasGTMFirstParty;
+        recommendations.push({
+            priority: 'high',
+            title: 'Enable GTM First-Party Mode',
+            categories: ['Analytics', 'Privacy'],
+            scoreImprovement: 15,
+            description: isImplemented ?
+                "GTM is loading from your own domain, protecting against ad blockers." :
+                "Your GTM container is loading from googletagmanager.com. This makes it vulnerable to ad blockers and can result in 15-30% data loss.",
+            benefits: [
+                'Avoid being blocked by ad blockers',
+                'Improve data collection accuracy',
+                'Ensure consistent tracking across all browsers'
+            ],
+            effort: 'low',
+            impact: 'high',
+            howTo: 'Configure GTM to load from your own domain using a custom loader script that serves gtm.js from your subdomain',
+            implemented: isImplemented
+        });
+    }
+
+    // 4. Avoid negative impact of ad blockers - Requires manual review
+    if (hasGTM) {
+        // Almost no one has this - requires proxy configuration
+        const isImplemented = false; // Default to not implemented
+        const needsManualReview = true; // Always needs review for this complex setup
+        
         recommendations.push({
             priority: 'high',
             title: 'Avoid negative impact of ad blockers',
             categories: ['Advertising', 'Analytics'],
             scoreImprovement: 13,
-            description: "Your GTM container is loading without proper protection against ad blockers. Ad blockers can interfere with tracking, leading to inaccurate data.",
+            description: needsManualReview ?
+                "⚠️ This requires a personalized consultation. Ad blockers can interfere with your tracking. Contact us for a custom assessment of your setup and implementation of a reverse proxy solution." :
+                "Your tracking setup is protected against ad blockers through reverse proxy configuration.",
             benefits: [
                 'Get precise tracking, even with ad blockers in use',
                 'Have cleaner view of user behavior and campaign performance',
                 'Maintain full control over your analytics setup and data integrity'
             ],
-            effort: 'medium',
+            effort: 'high',
             impact: 'high',
-            howTo: 'Implement a custom GTM loader script served from your domain'
+            howTo: needsManualReview ? 'Schedule a consultation for custom reverse proxy setup' : 'Implement a reverse proxy for tracking endpoints',
+            implemented: isImplemented,
+            requiresConsultation: needsManualReview
         });
     }
 
-    // 4. Switch to web & server-side tracking for Meta
-    if (report.metaPixel && !report.metaPixel.hasServerSide) {
+    // 5. Switch to web & server-side tracking for Meta
+    if (report.metaPixel) {
+        const isImplemented = report.metaPixel.hasServerSide;
         recommendations.push({
             priority: 'medium',
             title: 'Switch to web & server-side tracking for Meta',
             categories: ['Advertising'],
             scoreImprovement: 8,
-            description: "You're using client-side tracking for Meta. Meta recommends a hybrid tracking method — combining both web and server-side tracking.",
+            description: isImplemented ?
+                "Meta tracking is configured with both web and server-side implementation for optimal performance." :
+                "You're using client-side tracking for Meta. Meta recommends a hybrid tracking method – combining both web and server-side tracking.",
             benefits: [
                 'Combine web and server-side tracking for more reliable results',
                 'Capture a fuller picture of user interactions',
                 "Stay aligned with Meta's recommended tracking setup"
             ],
             effort: 'medium',
-            impact: 'medium',
-            howTo: 'Implement Meta Conversions API alongside your existing Pixel'
+            impact: 'high',
+            howTo: 'Implement Meta Conversions API alongside your existing Pixel',
+            implemented: isImplemented
         });
     }
 
-    // 5. Move to Google Ads server-side tracking
+    // 6. Move to Google Ads server-side tracking - DEFAULT NOT IMPLEMENTED
     const hasGoogleAds = (report.adsPlatforms && report.adsPlatforms['Google Ads']) ||
                          (report.jsTracking && (report.jsTracking._gcl || report.jsTracking._gac));
     
-    if (hasGoogleAds && (!report.adsPlatforms['Google Ads']?.hasServerSide)) {
+    if (hasGoogleAds) {
+        const isImplemented = false; // ALWAYS false as almost no one has this
+        const needsManualReview = true;
+        
         recommendations.push({
             priority: 'medium',
             title: 'Move to Google Ads server-side tracking',
             categories: ['Advertising'],
             scoreImprovement: 7,
-            description: "We've detected a client-side Google Ads script. Switching to server-side tracking will improve accuracy and reliability.",
+            description: needsManualReview ?
+                "⚠️ This requires a personalized consultation. Server-side Google Ads tracking requires complex setup with Enhanced Conversions API. Contact us for implementation guidance." :
+                "Google Ads is configured with server-side tracking for improved accuracy.",
             benefits: [
                 'Avoid disruptions caused by ad blockers and browser privacy settings',
                 'Ensure better alignment with privacy regulations',
                 'Improve overall tracking efficiency'
             ],
-            effort: 'high',
-            impact: 'medium',
-            howTo: 'Configure Google Ads Enhanced Conversions through server-side GTM'
+            effort: 'very high',
+            impact: 'high',
+            howTo: needsManualReview ? 'Schedule a consultation for Enhanced Conversions setup' : 'Configure Google Ads Enhanced Conversions through server-side GTM',
+            implemented: isImplemented,
+            requiresConsultation: needsManualReview
         });
     }
 
-    // Sort by score improvement and limit to 5
+    // 7. Consent Management Platform (always check)
+    const hasConsent = report.consentManagement && report.consentManagement.detected;
+    recommendations.push({
+        priority: 'critical',
+        title: 'Implement Consent Management Platform',
+        categories: ['Privacy', 'GDPR'],
+        scoreImprovement: 20,
+        description: hasConsent ?
+            `Cookie consent is implemented using ${report.consentManagement.platform}.` :
+            "No consent management platform detected. GDPR requires explicit user consent for tracking cookies.",
+        benefits: [
+            'Ensure GDPR compliance',
+            'Build trust with your users',
+            'Avoid potential legal penalties'
+        ],
+        effort: 'medium',
+        impact: 'high',
+        howTo: 'Implement a CMP like Cookiebot, OneTrust, or similar',
+        implemented: hasConsent
+    });
+
+    // Sort all recommendations by score improvement
     recommendations.sort((a, b) => (b.scoreImprovement || 0) - (a.scoreImprovement || 0));
-    report.recommendations = recommendations.slice(0, 5);
+    
+    // Don't limit - return all recommendations with their implementation status
+    report.recommendations = recommendations;
 }
 
 // API Endpoints
@@ -1240,7 +1466,7 @@ app.post('/api/analyze', rateLimitMiddleware, async (req, res) => {
         }
     }
     
-    console.log(`\n📍 New analysis request for: ${url}`);
+    console.log(`\n🔍 New analysis request for: ${url}`);
     console.log(`🕐 Started at: ${new Date().toLocaleString()}`);
     
     try {
@@ -1372,17 +1598,17 @@ async function startServer() {
         await browserPool.init();
         
         app.listen(PORT, () => {
-            console.log('╔═══════════════════════════════════════════════╗');
+            console.log('╔══════════════════════════════════════════════╗');
             console.log('║   🚀 Website Tracking Analyzer Pro v2.0.1   ║');
-            console.log('╠═══════════════════════════════════════════════╣');
+            console.log('╠══════════════════════════════════════════════╣');
             console.log(`║   ✅ Server:     http://localhost:${PORT}       ║`);
             console.log(`║   📊 API:        /api/analyze                ║`);
             console.log(`║   💾 Export:     /api/export                 ║`);
             console.log(`║   🏥 Health:     /api/health                 ║`);
-            console.log('╠═══════════════════════════════════════════════╣');
+            console.log('╠══════════════════════════════════════════════╣');
             console.log('║   Environment: ' + (process.env.NODE_ENV || 'development').padEnd(30) + '║');
             console.log('║   Platform:    ' + (process.env.RENDER ? 'Render.com' : 'Local').padEnd(30) + '║');
-            console.log('╚═══════════════════════════════════════════════╝');
+            console.log('╚══════════════════════════════════════════════╝');
             console.log('\nReady to analyze websites...\n');
         });
     } catch (error) {
