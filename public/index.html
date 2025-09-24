@@ -200,8 +200,8 @@
         }
 
         .analyze-btn {
-            background: var(--primary);
-            color: var(--bg-dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
             padding: 16px 40px;
             border-radius: 8px;
@@ -215,8 +215,9 @@
         }
 
         .analyze-btn:hover:not(:disabled) {
-            background: #f0f0f0;
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
             transform: translateY(-1px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
         .analyze-btn:disabled {
@@ -302,60 +303,9 @@
             }
         }
 
-        .score-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .score-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .score-main {
-            display: flex;
-            align-items: baseline;
-            gap: 15px;
-        }
-
-        .score-grade {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .scores-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-
-        .score-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .score-status {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .score-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .cookie-summary {
@@ -444,11 +394,6 @@
         .tab-content.active {
             display: block;
             animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .platform-grid {
@@ -878,10 +823,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .scores-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
             .cta-title {
                 font-size: 1.8rem;
             }
@@ -989,19 +930,19 @@
 
                 <div class="benefits-list">
                     <div class="benefit-item">
-                        <span class="benefit-icon">✓</span>
+                        <span class="benefit-icon">✔</span>
                         <span>Complete tracking and privacy analysis</span>
                     </div>
                     <div class="benefit-item">
-                        <span class="benefit-icon">✓</span>
+                        <span class="benefit-icon">✔</span>
                         <span>Personalized improvement recommendations</span>
                     </div>
                     <div class="benefit-item">
-                        <span class="benefit-icon">✓</span>
+                        <span class="benefit-icon">✔</span>
                         <span>GDPR compliance assessment</span>
                     </div>
                     <div class="benefit-item">
-                        <span class="benefit-icon">✓</span>
+                        <span class="benefit-icon">✔</span>
                         <span>Server-side tracking detection report</span>
                     </div>
                 </div>
@@ -1047,35 +988,6 @@
         </div>
 
         <div class="results" id="resultsSection">
-            <!-- Score Section -->
-            <div class="score-section">
-                <div class="score-header">
-                    <div class="score-main">
-                        <span class="score-number"><span id="overallScore">-</span>/100</span>
-                        <span class="score-grade">Grade: <span id="grade">-</span></span>
-                    </div>
-                </div>
-                
-                <div class="scores-grid">
-                    <div class="score-item">
-                        <div class="score-value" id="privacyScore">-</div>
-                        <div class="score-label">Privacy</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-value" id="performanceScore">-</div>
-                        <div class="score-label">Performance</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-value" id="implementationScore">-</div>
-                        <div class="score-label">Implementation</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-value" id="securityScore">-</div>
-                        <div class="score-label">Security</div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Tabs Navigation -->
             <div class="tabs">
                 <button class="tab active" data-tab="overview">Overview</button>
@@ -1397,7 +1309,7 @@
                         },
                         body: JSON.stringify({ 
                             url,
-                            email,  // Enviamos el email al servidor
+                            email,
                             useCache: false,
                             deepScan: false
                         }),
@@ -1472,7 +1384,6 @@
                     'Scanning tracking platforms...',
                     'Checking server-side implementations...',
                     'Evaluating security headers...',
-                    'Calculating scores...',
                     'Generating recommendations...'
                 ];
                 
@@ -1496,25 +1407,6 @@
             }
 
             displayResults(data) {
-                // Scores - Con verificación
-                const overallScoreEl = document.getElementById('overallScore');
-                if (overallScoreEl) overallScoreEl.textContent = data.scoring.overall;
-                
-                const gradeEl = document.getElementById('grade');
-                if (gradeEl) gradeEl.textContent = data.scoring.grade;
-                
-                const privacyScoreEl = document.getElementById('privacyScore');
-                if (privacyScoreEl) privacyScoreEl.textContent = data.scoring.privacy;
-                
-                const performanceScoreEl = document.getElementById('performanceScore');
-                if (performanceScoreEl) performanceScoreEl.textContent = data.scoring.performance;
-                
-                const implementationScoreEl = document.getElementById('implementationScore');
-                if (implementationScoreEl) implementationScoreEl.textContent = data.scoring.implementation;
-                
-                const securityScoreEl = document.getElementById('securityScore');
-                if (securityScoreEl) securityScoreEl.textContent = data.scoring.security || '-';
-
                 // Cookie Summary - Con verificación
                 const cookies = data.cookies || [];
                 const totalCookiesEl = document.getElementById('totalCookies');
@@ -1607,7 +1499,7 @@
 
                 // SSL Status - CON VERIFICACIÓN
                 const sslStatus = data.ssl && data.ssl.enabled ? 
-                    '<span style="color: var(--success);">✓ Enabled</span>' : 
+                    '<span style="color: var(--success);">✔ Enabled</span>' : 
                     '<span style="color: var(--danger);">✗ Disabled</span>';
                 const sslStatusElement = document.getElementById('sslStatus');
                 if (sslStatusElement) {
@@ -1618,7 +1510,7 @@
                 let consentStatus = '<span style="color: var(--warning);">⚠ Not detected</span>';
                 if (data.consentManagement && data.consentManagement.detected) {
                     const platform = data.consentManagement.platform || 'Unknown';
-                    consentStatus = `<span style="color: var(--success);">✓ ${platform}</span>`;
+                    consentStatus = `<span style="color: var(--success);">✔ ${platform}</span>`;
                 }
                 const consentStatusElement = document.getElementById('consentStatus');
                 if (consentStatusElement) {
@@ -1647,7 +1539,7 @@
                             </div>
                         `).join('');
                     } else {
-                        keyIssuesDiv.innerHTML = '<p style="color: var(--success);">✓ No critical issues detected</p>';
+                        keyIssuesDiv.innerHTML = '<p style="color: var(--success);">✔ No critical issues detected</p>';
                     }
                 }
             }
@@ -1698,7 +1590,10 @@
                 if (data.googleAnalytics && data.googleAnalytics.length > 0) {
                     data.googleAnalytics.forEach(ga => {
                         // Solo es realmente server-side si NO usa endpoints de Google
-                        const isRealServerSide = ga.serverSide && ga.endpoint && !ga.endpoint.includes('google');
+                        const isRealServerSide = ga.serverSide && ga.endpoint && 
+                            !ga.endpoint.includes('google-analytics.com') && 
+                            !ga.endpoint.includes('analytics.google.com') && 
+                            !ga.endpoint.includes('google.com');
                         
                         trackers.push({
                             platform: 'Google Analytics 4',
@@ -1820,13 +1715,19 @@
                 const gtmDetails = document.getElementById('gtmDetails');
                 if (gtmDetails) {
                     if (data.gtmConfig) {
+                        // Solo mostrar Custom Domain si realmente existe
+                        const showCustomDomain = data.gtmConfig.customDomain && 
+                                               !data.gtmConfig.loadedFrom.includes('googletagmanager.com');
+                        
                         gtmDetails.innerHTML = `
                             <p><strong>Container ID:</strong> ${data.gtmConfig.id}</p>
                             <p><strong>First-Party Mode:</strong> ${data.gtmConfig.firstPartyMode ? 
-                                '<span style="color: var(--success);">✓ Enabled</span>' : 
+                                '<span style="color: var(--success);">✔ Enabled</span>' : 
                                 '<span style="color: var(--warning);">✗ Disabled</span>'}</p>
-                            <p><strong>Loaded From:</strong> ${data.gtmConfig.loadedFrom}</p>
-                            ${data.gtmConfig.customDomain ? `<p><strong>Custom Domain:</strong> ${data.gtmConfig.customDomain}</p>` : ''}
+                            <p><strong>Loaded From:</strong> <code style="font-size: 0.85rem;">${data.gtmConfig.loadedFrom}</code></p>
+                            ${showCustomDomain ? 
+                                `<p><strong>Custom Domain:</strong> <span style="color: var(--success);">✔ ${data.gtmConfig.customDomain}</span></p>` : 
+                                ''}
                         `;
                     } else {
                         gtmDetails.innerHTML = '<p style="color: var(--text-secondary);">Google Tag Manager not detected</p>';
@@ -1859,7 +1760,7 @@
                 if (serverSideDetails) {
                     if (data.serverSideTracking && data.serverSideTracking.detected) {
                         serverSideDetails.innerHTML = `
-                            <p style="color: var(--success);"><strong>✓ Server-side tracking detected</strong></p>
+                            <p style="color: var(--success);"><strong>✔ Server-side tracking detected</strong></p>
                             <p><strong>Platforms:</strong> ${data.serverSideTracking.platforms.join(', ')}</p>
                             <p><strong>Confidence:</strong> ${data.serverSideTracking.confidence}%</p>
                         `;
@@ -1876,7 +1777,7 @@
                     if (data.ssl) {
                         sslDetails.innerHTML = `
                             <p><strong>Status:</strong> ${data.ssl.enabled ? 
-                                '<span style="color: var(--success);">✓ Enabled</span>' : 
+                                '<span style="color: var(--success);">✔ Enabled</span>' : 
                                 '<span style="color: var(--danger);">✗ Disabled</span>'}</p>
                             ${data.ssl.protocol ? `<p><strong>Protocol:</strong> ${data.ssl.protocol}</p>` : ''}
                             ${data.ssl.issuer ? `<p><strong>Issuer:</strong> ${data.ssl.issuer}</p>` : ''}
@@ -1902,7 +1803,7 @@
                             const isPresent = status === 'Present';
                             return `
                                 <p>
-                                    ${isPresent ? '✓' : '✗'} ${header.name}: 
+                                    ${isPresent ? '✔' : '✗'} ${header.name}: 
                                     <span style="color: ${isPresent ? 'var(--success)' : 'var(--warning)'};">
                                         ${status || 'Not checked'}
                                     </span>
@@ -1919,31 +1820,19 @@
                 const container = document.getElementById('recommendationsList');
                 if (!container) return;
                 
-                // Check for implemented features
-                const implemented = [];
-                const pending = data.recommendations || [];
+                const recommendations = data.recommendations || [];
                 
-                // Check what's already implemented based on the data
-                if (data.gtmConfig && data.gtmConfig.customDomain) {
-                    implemented.push({
-                        title: 'Custom subdomain for server GTM container',
-                        description: 'Your GTM server container is using a custom domain',
-                        detail: `Domain: ${data.gtmConfig.customDomain}`
-                    });
-                }
+                // Separate implemented from pending
+                const implemented = recommendations.filter(r => r.implemented);
+                const pending = recommendations.filter(r => !r.implemented);
                 
-                // Only count REAL server-side GA (with custom domain endpoint)
-                if (data.googleAnalytics && data.googleAnalytics.some(ga => ga.serverSide && ga.endpoint && !ga.endpoint.includes('google'))) {
-                    const serverSideGA = data.googleAnalytics.filter(ga => ga.serverSide && ga.endpoint && !ga.endpoint.includes('google'));
-                    implemented.push({
-                        title: 'Server-side tracking infrastructure',
-                        description: 'Google Analytics 4 with server-side tracking is active',
-                        detail: `${serverSideGA.length} server-side ID(s) detected`
-                    });
-                }
+                // Also check for additional implemented features not in recommendations
+                const additionalImplemented = [];
                 
-                if (data.consentManagement && data.consentManagement.detected) {
-                    implemented.push({
+                // Check for Consent Management if not in recommendations
+                if (!recommendations.some(r => r.title.includes('Consent')) && 
+                    data.consentManagement && data.consentManagement.detected) {
+                    additionalImplemented.push({
                         title: 'Consent Management Platform',
                         description: 'Cookie consent is implemented',
                         detail: `Platform: ${data.consentManagement.platform}`
@@ -1953,7 +1842,7 @@
                 let implementedHtml = '';
                 
                 // Show implemented features first
-                if (implemented.length > 0) {
+                if (implemented.length > 0 || additionalImplemented.length > 0) {
                     implementedHtml = `
                         <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(76, 175, 80, 0.1) 100%); 
                                     border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
@@ -1962,6 +1851,28 @@
                             </h3>
                             <div style="display: grid; gap: 15px;">
                                 ${implemented.map(item => `
+                                    <div style="padding: 15px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; 
+                                               border-left: 3px solid var(--success);">
+                                        <h4 style="margin-bottom: 5px; color: var(--primary); font-size: 1rem;">
+                                            ${item.title}
+                                        </h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 5px 0;">
+                                            ${item.description}
+                                        </p>
+                                        ${item.categories ? `
+                                            <div style="margin-top: 8px;">
+                                                ${item.categories.map(cat => `
+                                                    <span style="display: inline-block; padding: 2px 8px; background: rgba(255,255,255,0.05); 
+                                                               border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; 
+                                                               font-size: 0.7rem; margin-right: 5px; color: var(--text-secondary);">
+                                                        ${cat}
+                                                    </span>
+                                                `).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                                ${additionalImplemented.map(item => `
                                     <div style="padding: 15px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; 
                                                border-left: 3px solid var(--success);">
                                         <h4 style="margin-bottom: 5px; color: var(--primary); font-size: 1rem;">
@@ -1982,9 +1893,10 @@
                     `;
                 }
                 
-                // Show recommendations with focus on tracking improvements
+                // Show pending recommendations
+                let pendingHtml = '';
                 if (pending.length > 0) {
-                    const recommendationsHtml = `
+                    pendingHtml = `
                         <h3 style="margin-bottom: 20px;">Recommendations for Improvement</h3>
                         ${pending.map((rec, index) => {
                             const priorityColor = rec.priority === 'critical' ? 'var(--danger)' :
@@ -2016,7 +1928,7 @@
                                 <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; 
                                            padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden;">
                                     
-                                    <!-- Effort/Impact badge instead of score -->
+                                    <!-- Effort/Impact badge -->
                                     ${rec.effort && rec.impact ? `
                                         <div style="position: absolute; top: 20px; right: 20px; text-align: right;">
                                             <div style="font-size: 0.85rem; margin-bottom: 4px;">
@@ -2069,29 +1981,22 @@
                             `;
                         }).join('')}
                     `;
-                    
-                    container.innerHTML = implementedHtml + recommendationsHtml;
-                } else if (implemented.length > 0) {
-                    // Only implemented features, no pending recommendations
+                }
+                
+                // Display both sections
+                if (implemented.length > 0 && pending.length === 0) {
+                    // Only implemented features, everything is perfect
                     container.innerHTML = implementedHtml + `
                         <div style="background: var(--bg-card); border: 1px solid var(--success); border-radius: 12px; 
                                    padding: 40px; text-align: center;">
-                            <h3 style="color: var(--success); margin-bottom: 12px;">Perfect Setup!</h3>
+                            <h3 style="color: var(--success); margin-bottom: 12px;">Excellent Setup!</h3>
                             <p style="color: var(--text-secondary);">
-                                All major tracking optimizations are already implemented. Your setup is excellent!
+                                All major tracking optimizations are implemented. Your setup follows best practices!
                             </p>
                         </div>
                     `;
                 } else {
-                    // No data at all
-                    container.innerHTML = `
-                        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; 
-                                   padding: 40px; text-align: center;">
-                            <p style="color: var(--text-secondary);">
-                                No recommendations available.
-                            </p>
-                        </div>
-                    `;
+                    container.innerHTML = implementedHtml + pendingHtml;
                 }
             }
 
@@ -2113,7 +2018,7 @@
                 if (displayCookies.length === 0) {
                     tbody.innerHTML = showAll ? 
                         '<tr><td colspan="7" style="text-align: center; padding: 30px;">No cookies found</td></tr>' :
-                        '<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--success);">✓ No problematic cookies detected</td></tr>';
+                        '<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--success);">✔ No problematic cookies detected</td></tr>';
                     return;
                 }
 
@@ -2143,9 +2048,9 @@
             getStatusBadge(status) {
                 const badges = {
                     'ok': '<span class="status-badge success">OK</span>',
-                    'warning': '<span class="status-badge warning">Review</span>',
-                    'violation': '<span class="status-badge danger">Violation</span>',
-                    'expired': '<span class="status-badge danger">Expired</span>',
+                    'warning': '<span class="status-badge warning" title="Requires review - may need consent">Review</span>',
+                    'violation': '<span class="status-badge danger" title="GDPR violation - requires immediate attention">Violation</span>',
+                    'expired': '<span class="status-badge danger" title="Cookie has expired and should be removed">Expired</span>',
                     'compliant': '<span class="status-badge success">Compliant</span>'
                 };
                 return badges[status] || '<span class="status-badge">Unknown</span>';
@@ -2233,7 +2138,7 @@
                 if (navigator.share) {
                     navigator.share({
                         title: 'Website Tracking Analysis',
-                        text: `Analysis for ${this.currentData.url} - Score: ${this.currentData.scoring.overall}/100`,
+                        text: `Analysis for ${this.currentData.url}`,
                         url: shareUrl
                     }).catch(err => {
                         if (err.name !== 'AbortError') {
@@ -2259,14 +2164,6 @@
 URL: ${data.url}
 Date: ${new Date(data.timestamp).toLocaleString()}
 Domain: ${data.domain}
-
-SCORES
-------
-Overall: ${data.scoring.overall}/100 (${data.scoring.grade})
-Privacy: ${data.scoring.privacy}/100
-Performance: ${data.scoring.performance}/100
-Implementation: ${data.scoring.implementation}/100
-Security: ${data.scoring.security || 'N/A'}/100
 
 COOKIES (${data.cookies.length} total)
 -------
